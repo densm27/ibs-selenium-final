@@ -5,6 +5,11 @@ import org.junit.Assert;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;
+
+import java.net.MalformedURLException;
+import java.net.URI;
 
 import static ru.appline.framework.utils.PropConst.*;
 
@@ -86,13 +91,18 @@ public class DriverManager {
      * Метод инициализирующий веб драйвер
      */
     private void initDriver() {
-        if (OS.isFamilyWindows()) {
-            initDriverWindowsOsFamily();
-        } else if (OS.isFamilyMac()) {
-            initDriverMacOsFamily();
-        } else if (OS.isFamilyUnix()) {
-            initDriverUnixOsFamily();
+        if ("remote".equalsIgnoreCase(props.getProperty("type.driver"))){
+            initRemoteDriver();
+        }else{
+            if (OS.isFamilyWindows()) {
+                initDriverWindowsOsFamily();
+            } else if (OS.isFamilyMac()) {
+                initDriverMacOsFamily();
+            } else if (OS.isFamilyUnix()) {
+                initDriverUnixOsFamily();
+            }
         }
+
     }
 
     /**
@@ -137,6 +147,20 @@ public class DriverManager {
             default:
                 Assert.fail("Типа браузера '" + props.getProperty(TYPE_BROWSER) + "' не существует во фреймворке");
         }
+    }
+
+    private void initRemoteDriver(){
+        DesiredCapabilities capabilities = new DesiredCapabilities();
+        capabilities.setBrowserName(props.getProperty("type.browser"));
+        capabilities.setVersion("109.0");
+        capabilities.setCapability("enableVNC",true);
+        capabilities.setCapability("enableVideo",false);
+        try {
+            driver = new RemoteWebDriver(URI.create(props.getProperty("selenoid.url")).toURL(),capabilities);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
 
